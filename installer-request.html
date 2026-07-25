@@ -33,9 +33,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const database=supabase.createClient('https://pthvibwnyvlszmprfdit.supabase.co','sb_publishable_1UBB53SrLHpMhlrquuIOkw_4WtXsdE6');
-    const drivers=['Ah Teck','Ah Boon','Asroni','Kasdir'],installers=['Karam','Ariful','Nasir','Rafiq','Azijul','Mintu','Farhad'];
-    const driver=document.getElementById('driver');driver.innerHTML='<option value="">Select driver</option>'+drivers.map(name=>'<option>'+name+'</option>').join('');
-    const installerOptions='<option value="">Select installer</option>'+installers.map(name=>'<option>'+name+'</option>').join('');['installer1','installer2','installer3'].forEach(id=>document.getElementById(id).innerHTML=installerOptions);document.getElementById('date').value=new Date().toISOString().slice(0,10);
+    const defaultDrivers=['Ah Teck','Ah Boon','Asroni','Kasdir'],defaultInstallers=['Karam','Ariful','Nasir','Rafiq','Azijul','Mintu','Farhad'];
+    const driver=document.getElementById('driver');
+    function optionHtml(names,label){return '<option value="">Select '+label.toLowerCase()+'</option>'+names.map(name=>'<option>'+name+'</option>').join('')}
+    function setPeople(drivers,installers){driver.innerHTML=optionHtml(drivers,'Driver');const installerOptions=optionHtml(installers,'Installer');['installer1','installer2','installer3'].forEach(id=>document.getElementById(id).innerHTML=installerOptions)}
+    async function loadPeople(){const result=await database.from('installation_people').select('role,name').order('name');if(result.error){setPeople(defaultDrivers,defaultInstallers);return}const drivers=result.data.filter(person=>person.role==='Driver').map(person=>person.name),installers=result.data.filter(person=>person.role==='Installer').map(person=>person.name);setPeople(drivers.length?drivers:defaultDrivers,installers.length?installers:defaultInstallers)}
+    document.getElementById('date').value=new Date().toISOString().slice(0,10);loadPeople();
     const captured={arrival:null,return:null};let activeRecordId=localStorage.getItem('installation-active-record')||'';
     function capture(kind,input){const file=input.files[0];if(!file)return;captured[kind]={file,time:new Date().toISOString()};document.getElementById(kind+'Time').textContent=(kind==='arrival'?'Arrival':'Return')+' recorded: '+new Date(captured[kind].time).toLocaleString('en-MY');document.getElementById(kind+'Box').classList.add('done')}
     document.getElementById('arrivalCamera').onchange=event=>capture('arrival',event.target);document.getElementById('arrivalUpload').onchange=event=>capture('arrival',event.target);document.getElementById('returnCamera').onchange=event=>capture('return',event.target);document.getElementById('returnUpload').onchange=event=>capture('return',event.target);
